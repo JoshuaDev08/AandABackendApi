@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Override;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Location extends Model
 {
     //
+
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'slug',
@@ -49,7 +52,7 @@ class Location extends Model
         return $this->hasMany(Property::class);
     }
 
-    public function getRouteKey(): string
+    public function getRouteKeyName(): string
     {
         return 'slug';
     }
