@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class LocationResource extends JsonResource
 {
@@ -12,8 +13,8 @@ class LocationResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    
-     public function toArray(Request $request): array
+
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
@@ -43,7 +44,9 @@ class LocationResource extends JsonResource
             'check_in_time' => $this->check_in_time,
             'check_out_time' => $this->check_out_time,
 
-            'featured_image' => $this->featured_image,
+            'featured_image' => $this->featured_image
+                ? Storage::disk('public')->url($this->featured_image)
+                : null,
             'is_featured' => $this->is_featured,
 
             'properties' => PropertyResource::collection(

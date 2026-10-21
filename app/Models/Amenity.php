@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+
 
 class Amenity extends Model
 {
@@ -22,5 +25,10 @@ class Amenity extends Model
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];
+    }
+
+    public function roomTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(RoomType::class, 'room_type_amenity');
     }
 }

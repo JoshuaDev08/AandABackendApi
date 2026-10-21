@@ -47,7 +47,7 @@ class Location extends Model
         ];
     }
 
-    public function properties(): HasMany
+    public function properties(): HasMany   
     {
         return $this->hasMany(Property::class);
     }
