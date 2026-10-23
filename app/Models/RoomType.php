@@ -18,7 +18,7 @@ class RoomType extends Model
         'name',
         'slug',
         'description',
-        'max_adult',
+        'max_adults',
         'max_children',
         'max_occupancy',
         'bed_configuration',
@@ -60,5 +60,10 @@ class RoomType extends Model
             Amenity::class,
             'room_type_amenity'
         );
+    }
+
+    public function ratePlans(): HasMany
+    {
+        return $this->hasMany(RatePlan::class);
     }
 }
