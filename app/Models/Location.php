@@ -47,7 +47,7 @@ class Location extends Model
         ];
     }
 
-    public function properties(): HasMany   
+    public function properties(): HasMany
     {
         return $this->hasMany(Property::class);
     }
@@ -55,5 +55,10 @@ class Location extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
     }
 }
