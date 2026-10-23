@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\RoomController;
+use App\Http\Controllers\Api\V1\LocationMediaController;
 
 
 Route::get('/health', [HealthController::class, 'index']);
@@ -32,5 +33,21 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', fn(Request $request) => $request->user());
+    });
+
+    Route::middleware([
+        'auth:sanctum',
+        'can:manage-media',
+    ])->prefix('admin')->group(function () {
+
+        Route::post(
+            '/locations/{location:slug}/featured-image',
+            [LocationMediaController::class, 'store']
+        )->name('admin.locations.image.store');
+
+        Route::delete(
+            '/locations/{location:slug}/featured-image',
+            [LocationMediaController::class, 'destroy']
+        )->name('admin.locations.image.destroy');
     });
 });
