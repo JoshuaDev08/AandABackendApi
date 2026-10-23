@@ -58,6 +58,8 @@ class AvailabilityService
                 'rooms' => function ($query) use ($checkIn, $checkOut) {
                     $query
                         ->where('status', RoomStatus::AVAILABLE->value)
+
+                        // Exclude date-specific restrictions.
                         ->whereDoesntHave('availabilities', function ($q) use (
                             $checkIn,
                             $checkOut
@@ -70,6 +72,25 @@ class AvailabilityService
                                     'blocked',
                                     'maintenance',
                                 ]);
+                        })
+
+                        // Exclude actual bookings that hold inventory.
+                        ->whereDoesntHave('bookingRooms', function ($q) use (
+                            $checkIn,
+                            $checkOut
+                        ) {
+                            $q->whereHas('booking', function ($booking) use (
+                                $checkIn,
+                                $checkOut
+                            ) {
+                                $booking
+                                    ->whereIn(
+                                        'status',
+                                        \App\Enums\BookingStatus::holdingInventory()
+                                    )
+                                    ->where('check_in', '<', $checkOut)
+                                    ->where('check_out', '>', $checkIn);
+                            });
                         });
                 },
             ])

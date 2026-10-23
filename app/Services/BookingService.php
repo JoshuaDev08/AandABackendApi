@@ -11,15 +11,68 @@ use App\Models\Room;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class BookingService
 {
     public function __construct(
-        private readonly PricingService $pricing
+        private readonly PricingService $pricing,
+        private readonly BookingAvailabilityService $availability,
     ) {}
 
     public function create(array $data): Booking
     {
+        $data = Validator::make($data, [
+            'location_id' => ['required', 'integer', 'exists:locations,id'],
+            'check_in' => ['required', 'date_format:Y-m-d'],
+            'check_out' => ['required', 'date_format:Y-m-d'],
+
+            'primary_guest' => ['required', 'array'],
+            'primary_guest.first_name' => ['required', 'string', 'max:100'],
+            'primary_guest.last_name' => ['required', 'string', 'max:100'],
+            'primary_guest.email' => ['nullable', 'email', 'max:255'],
+            'primary_guest.phone' => ['nullable', 'string', 'max:30'],
+
+            'additional_guests' => ['sometimes', 'array'],
+            'additional_guests.*.first_name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'additional_guests.*.last_name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'additional_guests.*.email' => [
+                'nullable',
+                'email',
+                'max:255',
+            ],
+            'additional_guests.*.phone' => [
+                'nullable',
+                'string',
+                'max:30',
+            ],
+
+            'rooms' => ['required', 'array', 'min:1'],
+            'rooms.*.room_id' => [
+                'required',
+                'integer',
+                'exists:rooms,id',
+                'distinct',
+            ],
+            'rooms.*.adults' => ['required', 'integer', 'min:1'],
+            'rooms.*.children' => ['sometimes', 'integer', 'min:0'],
+
+            'special_requests' => ['nullable', 'string', 'max:2000'],
+        ])->validate();
+
+        $this->availability->validateDates(
+            $data['check_in'],
+            $data['check_out']
+        );
+
         return DB::transaction(function () use ($data) {
 
             $location = Location::query()
@@ -41,11 +94,25 @@ class BookingService
 
             $roomIds = $selectedRooms->pluck('room_id')->all();
 
-            $rooms = Room::query()
-                ->with('roomType.property')
-                ->whereIn('id', $roomIds)
-                ->get()
-                ->keyBy('id');
+            $rooms = collect();
+
+            foreach (collect($roomIds)->unique()->sort()->values() as $roomId) {
+                $lockedRoom = Room::query()
+                    ->whereKey($roomId)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$lockedRoom) {
+                    throw ValidationException::withMessages([
+                        'rooms' => ['A selected room does not exist.'],
+                    ]);
+                }
+
+                $lockedRoom->load('roomType.property');
+
+                $rooms->put($lockedRoom->id, $lockedRoom);
+            }
+
 
             $totalAdults = 0;
             $totalChildren = 0;
@@ -92,6 +159,13 @@ class BookingService
                         ],
                     ]);
                 }
+
+                $this->availability->assertAvailable(
+                    $room,
+                    $data['check_in'],
+                    $data['check_out']
+                );
+
 
                 $adults = (int) $item['adults'];
                 $children = (int) ($item['children'] ?? 0);

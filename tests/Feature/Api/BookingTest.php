@@ -200,14 +200,16 @@ it('calculates the total for two rooms and two nights', function () {
 });
 
 it('generates unique booking references', function () {
-
     $first = app(BookingService::class)
         ->create($this->payload);
 
-    // Separate booking with the same room selection.
-    // Day 10 will prohibit overlapping reservations.
+    $secondPayload = $this->payload;
+
+    $secondPayload['check_in'] = '2026-11-04';
+    $secondPayload['check_out'] = '2026-11-06';
+
     $second = app(BookingService::class)
-        ->create($this->payload);
+        ->create($secondPayload);
 
     expect($first->reference)
         ->not->toBe($second->reference);
@@ -232,7 +234,7 @@ it('rolls back if a selected room belongs to another location', function () {
         'is_active' => true,
     ]);
 
-    $otherRoom = Room::factory()->create([  
+    $otherRoom = Room::factory()->create([
         'room_type_id' => $otherType->id,
     ]);
 
