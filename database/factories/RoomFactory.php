@@ -25,7 +25,7 @@ class RoomFactory extends Factory
         return [
             //
             'room_type_id' => RoomType::factory(),
-            'room_number' => fake()->unique()->bothify('RM-####-??'),,
+            'room_number' => fake()->unique()->bothify('RM-####-??'),
             'floor' => null,
             'status' => RoomStatus::AVAILABLE,
             'internal_notes' => null,

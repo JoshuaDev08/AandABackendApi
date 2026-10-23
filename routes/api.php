@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\RoomController;
 use App\Http\Controllers\Api\V1\LocationMediaController;
 use App\Http\Controllers\Api\V1\PricingController;
-
+use App\Http\Controllers\Api\V1\AvailabilityController;
 
 Route::get('/health', [HealthController::class, 'index']);
 
@@ -36,6 +36,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         '/locations/{location:slug}/properties/{property}/rooms/{roomType}/pricing',
         [PricingController::class, 'quote']
     )->name('rooms.pricing');
+
+    Route::post(
+        '/availability/search',
+        [AvailabilityController::class, 'search']
+    )->name('availability.search');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', fn(Request $request) => $request->user());

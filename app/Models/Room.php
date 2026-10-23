@@ -6,6 +6,7 @@ use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 class Room extends Model
@@ -21,7 +22,8 @@ class Room extends Model
         'internal_notes',
     ];
 
-    protected function casts(): array {
+    protected function casts(): array
+    {
         return [
             'status' => RoomStatus::class,
         ];
@@ -30,5 +32,10 @@ class Room extends Model
     public function roomtype(): BelongsTo
     {
         return $this->belongsTo(RoomType::class);
+    }
+
+    public function availabilities(): HasMany
+    {
+        return $this->hasMany(RoomAvailability::class);
     }
 }
